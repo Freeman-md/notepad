@@ -5,6 +5,7 @@ import store from './store'
 import vuetify from './plugins/vuetify'
 import firebase from 'firebase/app'
 import 'firebase/firestore'
+import * as VueSpinnersCss from "vue-spinners-css";
 
 Vue.config.productionTip = false
 
@@ -17,6 +18,20 @@ firebase.initializeApp({
     appId: "1:733111826588:web:164951ba830b36031e9559",
     measurementId: "G-T4PSGX618Y"
 })
+
+export const db = firebase.firestore()
+
+Vue.filter('truncate', function (value: string, size: number) {
+  if (!value) return '';
+  value = value.toString();
+
+  if (value.length <= size) {
+    return value;
+  }
+  return value.substr(0, size) + '...';
+});
+
+Vue.use(VueSpinnersCss)
 
 new Vue({
   router,
