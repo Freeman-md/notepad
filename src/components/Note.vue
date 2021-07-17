@@ -1,6 +1,7 @@
 <template>
   <v-card
   class="mb-4"
+  @click.prevent="editNote"
   >
     <div class="ml-4 text-overline">{{date}}</div>
     <v-card-title class="text-h5">
@@ -33,9 +34,10 @@
   </v-card>
 </template>
 
-<script lang="ts">
+<script>
 import Vue from 'vue'
 import moment from 'moment'
+import Todo from '../todo'
 export default Vue.extend({
   name: 'Note',
   props: ['note'],

@@ -2,12 +2,12 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+
 import vuetify from './plugins/vuetify'
 import firebase from 'firebase/app'
 import 'firebase/firestore'
+import "firebase/auth";
 import * as VueSpinnersCss from "vue-spinners-css";
-
-Vue.config.productionTip = false
 
 firebase.initializeApp({
     apiKey: "AIzaSyAMz4Uh6UDn1bi5G87P-Nls8kj17VBR8ks",
@@ -20,6 +20,7 @@ firebase.initializeApp({
 })
 
 export const db = firebase.firestore()
+export const auth = firebase.auth()
 
 Vue.filter('truncate', function (value: string, size: number) {
   if (!value) return '';
@@ -33,9 +34,24 @@ Vue.filter('truncate', function (value: string, size: number) {
 
 Vue.use(VueSpinnersCss)
 
-new Vue({
+Vue.config.productionTip = false
+
+var VueApp: any = Vue
+
+
+VueApp.mixin({
+  data: () => ({ aRandomMixinProperty: "John Doe" }),
+
+  mounted()
+  {
+      (this as typeof VueApp).aRandomMixinProperty = "John Snow";
+  }
+});
+
+
+new VueApp({
   router,
   store,
   vuetify,
-  render: h => h(App)
+  render: (h:Function) => h(App)
 }).$mount('#app')

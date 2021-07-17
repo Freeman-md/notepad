@@ -5,7 +5,7 @@
     <v-container>
       <v-row>
 
-        <v-col md="6" offset-md="3" sm="8" offset-sm="2" v-if="filteredNotes">
+        <v-col md="6" offset-md="3" sm="8" offset-sm="2">
           <v-text-field
             hide-details
             prepend-inner-icon="mdi-magnify"
@@ -18,17 +18,18 @@
 
           <br>
           
-          <Note :note="note" v-for="(note, index) in filteredNotes" :key="index"/>
+          <transition mode="out-in" name="switch">
+            <div v-if="filteredNotes">
+              <transition-group name="list" appear tag="div">
+                <Note :note="note" v-for="(note, index) in filteredNotes" :key="index"/>
+              </transition-group>
+            </div>
+            <div class="justify-center d-flex" v-else>
+              <EllipsisLoader color="#1976d2" />
+            </div>
+          </transition>
         </v-col>
 
-        <v-col md="6" offset-md="3" sm="8" offset-sm="2" class="justify-center align-center align-content-center d-flex flex-column" v-else>
-          <span class="mb-2 h5">No notes avaliable</span>
-          <router-link :to="{name: 'Note'}">
-            <v-btn text color="primary">
-              Add Note
-            </v-btn>
-          </router-link>
-        </v-col>
 
       </v-row>
     </v-container>
@@ -45,14 +46,11 @@
         <v-icon>mdi-plus</v-icon>
       </v-btn>
     </v-fab-transition>
-
-    <Snackbar />
   </div>
 </template>
 
-<script lang="ts">
+<script>
   import Note from '@/components/Note.vue'
-  import Snackbar from '@/components/Snackbar.vue'
   import Vue from 'vue'
   import NoteClass from '../note'
 
@@ -64,16 +62,13 @@
       }
     },
     components: {
-        Note, Snackbar
-    },
-    created() {
-      this.$store.dispatch('getNotes')
+        Note
     },
     computed: {
       filteredNotes() {
         if (this.$store.state.notes.length > 0) {
           if (this.searchText) {
-            return this.$store.state.notes.filter((note: NoteClass) => {
+            return this.$store.state.notes.filter((note) => {
               return note.title.toLowerCase().includes(this.searchText.toLowerCase())
             })
           } else {
@@ -93,3 +88,44 @@
     }
   })
 </script>
+
+<style scoped>
+  .list-enter-from {
+    opacity: 0;
+    transform: scale(0.6)
+  }
+  .list-enter-to {
+    opacity: 1;
+    transform: scale(1)
+  }
+  .list-enter-active {
+    transition: all 0.4s ease;
+  }
+  .list-leave-from{
+    opacity: 1;
+    transform: scale(1)
+  }
+  .list-leave-to{
+    opacity: 0;
+    transform: scale(0.6)
+  }
+  .list-leave-active{
+    transition: all 0.4s ease;
+    position: absolute;
+  }
+  .list-move {
+    transition: all 0.3s ease;
+  }
+
+  /* switch transitions */
+  .switch-enter-from,
+  .switch-leave-to {
+    opacity: 0;
+    transform: translateY(20px)
+  }
+
+  .switch-enter-active,
+  .switch-leave-active {
+    transition: all 0.5s ease;
+  }
+</style>

@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import {db} from '../main'
+import {db, auth} from '../main'
 import moment from 'moment'
 import router from '../router'
 
@@ -12,16 +12,15 @@ export default new Vuex.Store({
     note: {},
     todos: {},
     id: '',
-    loading: {
-      notes: false,
-      note: false,
-      todos: false,
-      todo: false
-    },
+    loading: false,
     snackbar: {
       show: false,
       text: ''
-    }
+    },
+    authenticated: false,
+    user: {},
+    signIn: false,
+    signUp: false,
   },
   getters: {
     note(state) {
@@ -29,6 +28,9 @@ export default new Vuex.Store({
     },
     id(state) {
       return state.id
+    },
+    authenticated(state) {
+      return state.authenticated
     }
   },
   mutations: {
@@ -47,7 +49,7 @@ export default new Vuex.Store({
       state.todos = payload.todos
     },
     setLoading: (state, payload) => {
-      state.loading[payload.name] = payload.value
+      state.loading = payload.value
     },
     showSnackbar: (state, payload) => {
       state.snackbar.show = true
@@ -56,6 +58,16 @@ export default new Vuex.Store({
     resetSnackbar: (state) => {
       state.snackbar.show = false
       state.snackbar.text = ''
+    },
+    setUser: (state, payload) => {
+      state.authenticated = payload.authenticated
+      state.user = payload.user
+    },
+    setSignIn: (state, payload) => {
+      state.signIn = payload.signIn
+    },
+    setSignUp: (state, payload) => {
+      state.signUp = payload.signUp
     }
   },
   actions: {
@@ -185,7 +197,6 @@ export default new Vuex.Store({
       
       return todos
     },
-
     addTodo: async(context, payload) => {
       context.commit('setLoading', {name: 'todo', value: true})
 
@@ -222,8 +233,72 @@ export default new Vuex.Store({
         .delete()
 
       dispatch('getTodos', {id: payload.note_id})
-    }
+    },
+    listenForAuthChanges: async({commit, dispatch}) => {
+      auth
+        .onAuthStateChanged(cred => {
+          if (cred) {
+            commit('setUser', {user: cred, authenticated: true})
+            dispatch('getNotes')
+          }
+        }, err => {
+          commit('showSnackbar', {text: err.message})
 
+          setTimeout(() => {
+            commit('resetSnackbar')
+          }, 3000);
+        }) 
+    },
+    signUp: async({commit}, payload) => {
+      auth
+        .createUserWithEmailAndPassword(payload.email, payload.password)
+        .then((cred) => {
+          commit('setUser', {user: cred.user, authenticated: true})
+          commit('setSignUp', {signUp: false})
+        })
+        .catch((error) => {
+          commit('showSnackbar', {text: error.message})
+
+          setTimeout(() => {
+            commit('resetSnackbar')
+          }, 3000);
+        })
+    },
+    signIn: async({commit}, payload) => {
+      auth
+        .signInWithEmailAndPassword(payload.email, payload.password)
+        .then((cred) => {
+          commit('setUser', {user: cred.user, authenticated: true})
+          commit('setSignIn', {signIn: false})
+        })
+        .catch((error) => {
+          commit('showSnackbar', {text: error.message})
+
+          setTimeout(() => {
+            commit('resetSnackbar')
+          }, 3000);
+        })
+    },
+    logout: async({commit}) => {
+      auth
+        .signOut()
+        .then(() => {
+          commit('setUser', {user: {}, authenticated: false})
+
+          commit('showSnackbar', {text: 'Logged out successfully.'})
+
+          setTimeout(() => {
+            commit('resetSnackbar')
+          }, 3000);
+        })
+        .catch(err => {
+          commit('showSnackbar', {text: err.message})
+
+          setTimeout(() => {
+            commit('resetSnackbar')
+          }, 3000);
+        })
+    }
   },
   modules: {
   }

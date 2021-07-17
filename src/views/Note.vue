@@ -1,11 +1,10 @@
 <template>
   <v-container>
     <v-row>
-      <v-col lg="6" offset-lg="3" class="justify-center d-flex " v-if="$store.state.loading.note">
-        <EllipsisLoader color="blue" />
+      <v-col md="6" offset-md="3" sm="8" offset-sm="2" v-if="$store.state.loading" class="justify-center d-flex">
+        <EllipsisLoader color="#1976d2" />
       </v-col>
-      <v-col lg="6" offset-lg="3" v-else>
-
+      <v-col md="6" offset-md="3" sm="8" offset-sm="2" v-else>
         <v-btn icon @click="home">
           <v-icon>
             mdi-arrow-left
@@ -17,14 +16,13 @@
         
         <v-text-field @keydown.enter="saveNote" @blur="saveNote" v-model="note.title" solo placeholder="Title" class="text-h6">
         </v-text-field>
-
+        
         <v-textarea @blur="saveNote" v-model="note.details" solo placeholder="Note something down">
         </v-textarea>
         
         <Todos/>
       </v-col>
     </v-row>
-    <Snackbar />
   </v-container>
 </template>
 
@@ -34,11 +32,10 @@ import Todos from '../components/Todos.vue'
 import PulseLoader from 'vue-spinner/src/PulseLoader.vue'
 import moment from 'moment'
 import {mapState} from 'vuex'
-import Snackbar from '@/components/Snackbar.vue'
 
 export default Vue.extend({
   name: 'Note',
-  components: {Todos, PulseLoader, Snackbar},
+  components: {Todos, PulseLoader},
   mounted(){
     this.getNote()
   },
