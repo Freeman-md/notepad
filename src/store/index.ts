@@ -18,7 +18,9 @@ export default new Vuex.Store({
       text: ''
     },
     authenticated: false,
-    user: {},
+    user: {
+      uid: ''
+    },
     signIn: false,
     signUp: false,
   },
@@ -71,15 +73,20 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    getNotes: async({commit, dispatch}) => {
-      let snapshot = await db.collection('notes').orderBy('date', 'desc').get()
+    getNotes: async(context) => {
+      let snapshot = await db
+        .collection('notes')
+        .orderBy('date', 'desc')
+        .get()
       let notes: Array<Object> = []
       snapshot.forEach(doc => {
-        let appData = doc.data()
-        appData.id = doc.id
-        notes.push(appData)
+        if (doc.data().uid == context.state.user.uid) {
+          let appData = doc.data()
+          appData.id = doc.id
+          notes.push(appData)
+        }
       }),
-      commit('setNotes', {notes: notes})
+      context.commit('setNotes', {notes: notes})
     },
     getNote: async ({commit, dispatch}, payload) => {
       commit('setLoading', {name: 'note', value: true})
@@ -101,7 +108,7 @@ export default new Vuex.Store({
         commit('setNote', {note: note, id: id})
       }
     },
-    saveNote: async({commit, dispatch}, payload) => {
+    saveNote: async(context, payload) => {
       if (payload.note.title) {
         if(payload.note.title.length >= 1) {
           console.log(payload.note.title)
@@ -120,9 +127,9 @@ export default new Vuex.Store({
         if (payload.id) {
 
           if (!payload.note.title && !payload.note.details) {
-            const todos = await dispatch('getNoteTodos', {id: payload.note.id})
+            const todos = await context.dispatch('getNoteTodos', {id: payload.note.id})
             if (todos.length > 0) {
-              await dispatch('deleteNote', {id: payload.id})
+              await context.dispatch('deleteNote', {id: payload.id})
               router.push({name: 'Notes'})
             }
           }
@@ -131,7 +138,7 @@ export default new Vuex.Store({
           .doc(payload.id)
           .update({
             ...payload.note,
-            date: moment().valueOf()
+            date: moment().valueOf(),
           })
         } else {
           if (!payload.note.title) {
@@ -145,7 +152,8 @@ export default new Vuex.Store({
           const data = {
             title: payload.note.title,
             details: payload.note.details,
-            date: moment().valueOf()
+            date: moment().valueOf(),
+            uid: context.state.user.uid
           }
           const snapshot = await db
           .collection('notes')
@@ -153,15 +161,15 @@ export default new Vuex.Store({
             ...data
           })
           
-          await dispatch('getNote', {id: snapshot.id})
+          await context.dispatch('getNote', {id: snapshot.id})
           router.push({name: 'Note', params: {id: snapshot.id}})
         }
 
-        dispatch('getNotes')
-        commit('showSnackbar', {text: 'Note saved successfully'})
+        context.dispatch('getNotes')
+        context.commit('showSnackbar', {text: 'Note saved successfully'})
 
         setTimeout(() => {
-          commit('resetSnackbar')
+          context.commit('resetSnackbar')
         }, 3000);
       }
     },
@@ -284,6 +292,7 @@ export default new Vuex.Store({
         .signOut()
         .then(() => {
           commit('setUser', {user: {}, authenticated: false})
+          commit('setNotes', {notes: {}})
 
           commit('showSnackbar', {text: 'Logged out successfully.'})
 

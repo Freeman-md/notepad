@@ -23,6 +23,15 @@
               <transition-group name="list" appear tag="div">
                 <Note :note="note" v-for="(note, index) in filteredNotes" :key="index"/>
               </transition-group>
+              <v-alert
+                border="top"
+                colored-border
+                type="info"
+                elevation="2"
+                v-show="filteredNotes.length <= 0"
+              >
+              No notes available
+              </v-alert>
             </div>
             <div class="justify-center d-flex" v-else>
               <EllipsisLoader color="#1976d2" />
@@ -74,6 +83,8 @@
           } else {
             return this.$store.state.notes
           }
+        } else {
+          return this.$store.state.notes
         }
       }
     },
